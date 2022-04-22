@@ -122,7 +122,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
-STATIC_ROOT = "/data/lastfm_downloader/lastfm_downloader/core/static/"
+#STATIC_ROOT = "/data/lastfm_downloader/lastfm_downloader/core/static/"
 STATIC_URL = 'static/'
 #STATICFILES_DIRS = [
 #    BASE_DIR / "static",
