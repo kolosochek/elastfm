@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lastfm_user.nickname|title }} profile page{% endblock %}
+{% block page_class %}profile_page{% endblock %}
+{% block content %}
+{% block profile-section %}
+<div class="b-wrapper clearfix">
+    <h3 class="b-profile-header"><span>{{ lastfm_user.nickname }}</span></h3>
+    <div class="profile-caption float-left">
+        <p><img src="{{ lastfm_user.avatar_url }}" class="profile-avatar rounded-circle" alt="Avatar"/></p>
+    </div>
+    <div class="profile-summary float-left">
+        <p>Total scrobbled tracks: <b>{{ lastfm_user.total_scrobbled_tracks }}</b></p>
+        <p>Total artists: <b>{{ lastfm_user.total_artists }}</b></p>
+        <p>Total loved tracks: <b>{{ lastfm_user.total_loved_tracks }}</b></p>
+    </div>
+</div>
+{% endblock %}
+{% if track_list %}
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Track Name</th>
+        <th scope="col">Artist</th>
+        <th scope="col">Url</th>
+        <th scope="col">Download</th>
+        <!--
+        <th scope="col">Download URL</th>
+        -->
+    </tr>
+    </thead>
+    <tbody>
+    {% for track in track_list %}
+    <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+        <th scope="row">{{ forloop.counter }}</th>
+        <td>{{ track.track }}</td>
+        <td>{{ track.artist }}</td>
+        <td>{{ track.url }}</td>
+        <td class="text-center">
+            {% if track.url %}
+            <a class="btn download" href="/download_track/?track_id={{ track.pk }}">
+                <i class="bi bi-file-earmark-arrow-down" role="img" aria-label="download"></i>
+            </a>
+            {% endif %}
+        </td>
+        <!-- <td>
+            {% if track.download_url %}
+            <a class="btn download" href="{{ track.download_url }}" download>
+                <i class="bi-download" role="img" aria-label="download"></i>
+            </a>
+            {% endif %}
+        </td>
+        -->
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+{% if lastfm_user.total_loved_tracks != '0' %}
+<p>No tracks for this user has been found. You need to parse all the track info first.</p>
+<p><a href="/parse_loved_tracks" class="btn btn-success">Parse all loved <b>{{ lastfm_user.nickname }}</b> tracks(can
+    take a long time)</a></p>
+{% elif lastfm_user.total_loved_tracks == '0'  %}
+<p>No tracks for this user has been found. Try to like some tracks on <a href="https://www.last.fm/">Last.fm</a></p>
+{% endif %}
+{% endif %}
+<!--
+<p class="align-right">
+
+    <a href="/tracks" class="btn btn-success">Show all <b>{{ lastfm_user.nickname }}</b> parsed tracks</a>
+</p>
+-->
+{% endblock %}

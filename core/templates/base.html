@@ -1,0 +1,71 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/static/favicon.ico">
+
+    <title>{% block title %}elast.fm index page{% endblock %}</title>
+
+    <link rel="canonical" href="/">
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Custom styles for this template -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+
+<body class="b-body ">
+
+<section class="container b-wrapper d-flex h-100 p-3 mx-auto flex-column {% block page_class %}{% endblock %}">
+    <header class="b-header {% if active_page != 'profile' %}mb-auto{% endif %}">
+        <div class="b-wrapper clearfix">
+            <h3 class="b-logo float-left">
+                <a class="b-link" href="/"><b>e</b>last.fm</a>
+            </h3>
+            {% block topmenu %}
+            <nav class="nav nav-masthead justify-content-center float-right">
+                <a class="nav-link {% if active_page == 'index' %}active{% endif %}" href="/">Index</a>
+                <a class="nav-link {% if active_page == 'profile' %}active{% endif %}" href="/profile">Profile</a>
+            </nav>
+            {% endblock %}
+        </div>
+        </div>
+    </header>
+    <main class="content b-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+    {% block footer %}
+    <footer class="mastfoot b-footer mt-auto">
+        <div class="b-wrapper clearfix">
+            <div class="float-left b-logo">
+                <p>
+                    <a href="/"><b>e</b>last.fm</a>
+                </p>
+            </div>
+            <div class="float-right">
+                <p>
+                    &copy;{% now "Y" %}
+                </p>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+</section>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+</body>
+</html>
+
+
+

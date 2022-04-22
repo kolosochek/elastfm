@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h3><b>{{ lastfm_user.nickname }}</b> loved tracks</h3>
+<p><img src="{{ lastfm_user.avatar_url }}" class="rounded-circle" alt="Avatar"/></p>
+<p>Total scrobbled tracks: <b>{{ lastfm_user.total_scrobbled_tracks }}</b></p>
+<p>Total artists: <b>{{ lastfm_user.total_artists }}</b></p>
+<p>Total loved tracks: <b>{{ lastfm_user.total_loved_tracks }}</b></p>
+<p class=""></p>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Track Name</th>
+        <th scope="col">Artist</th>
+        <th scope="col">Url</th>
+        <th scope="col">Action</th>
+        <!--
+        <th scope="col">Download URL</th>
+        -->
+    </tr>
+    </thead>
+    <tbody>
+    {% for track in track_list %}
+    <tr>
+        <th scope="row">{{ forloop.counter }}</th>
+        <td>{{ track.track }}</td>
+        <td>{{ track.artist }}</td>
+        <td>{{ track.url }}</td>
+        <td>
+            {% if track.url %}
+            <a class="btn download" href="/download_track/?track_id={{ track.pk }}">
+                <i class="bi bi-file-earmark-arrow-down" role="img" aria-label="download"></i>
+            </a>
+            {% endif %}
+        </td>
+        <!-- <td>
+            {% if track.download_url %}
+            <a class="btn download" href="{{ track.download_url }}" download>
+                <i class="bi-download" role="img" aria-label="download"></i>
+            </a>
+            {% endif %}
+        </td>
+        -->
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

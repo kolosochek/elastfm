@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<section class="content b-content b-page-index">
+    <h3 class="text-center">How does it works?</h3>
+    <p></p>
+    <!-- <p class="text-left">We just need your <a href="https://www.last.fm/">Last.fm</a> profile name, something like <b>Cherry_ICEE</b>. <br />Sounds like magic, huh?</p> -->
+    <!-- <p>Then we will do all the magic, and you will be able to download, save, or move your <a href="https://www.last.fm/">Last.fm</a>
+        media library!</p> -->
+    {% if errors %}
+    <p class="error">{{ errors }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <p class="text-left">We don't need your <a href="https://www.last.fm/">Last.fm</a> password, email, credit card
+            or any kind of personal info.</p>
+        <div id="div_id_nickname" class="form-group">
+            <p>
+                <label for="nickname" class=" requiredField">
+                    Just enter your last.fm username<span class="asteriskField">*</span>
+                </label>
+            <div>
+                {{ form.nickname }}
+            </div>
+            </p>
+        </div>
+        <p>
+            <button type="submit" class="btn btn-success">Submit</button>
+        </p>
+    </form>
+</section>
+{% endblock %}
