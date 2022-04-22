@@ -1,3 +1,4 @@
 **/downloads
 core/__pycache__
 core/migrations
+**.idea
