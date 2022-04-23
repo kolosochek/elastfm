@@ -2,4 +2,9 @@
 **/__pycache__
 core/migrations
 **/.idea
-elastfm/settings.py
+**/settings.py
+*.pyc
+*.swo
+*.swp
+*.swn
+
