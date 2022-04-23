@@ -1,5 +1,5 @@
 **/downloads
-core/__pycache__
+**/__pycache__
 core/migrations
-**.idea
+**/.idea
 elastfm/settings.py
