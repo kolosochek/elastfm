@@ -2,3 +2,4 @@
 core/__pycache__
 core/migrations
 **.idea
+elastfm/settings.py

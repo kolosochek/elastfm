@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-(t@!t@+4c+&$rwzp)!k7#8m25k0^o^js&sw^$9q@c^jsc_sfk5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -82,8 +82,14 @@ WSGI_APPLICATION = 'elastfm.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'elastfm',
+	'USER': 'python',
+	'PASSWORD': '@Zaloopa',
+	'HOST': 'localhost',
+	'PORT': '',
+	'CHARSET': 'utf8',
+	'COLLATION': 'utf8_general_ci',
     }
 }
 
@@ -122,13 +128,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
-STATIC_ROOT = "~/elastfm/core/static/"
-#STATIC_ROOT = "/data/elastfm/elastfm/core/static/"
+STATIC_ROOT = "~/data/elastfm/core/static/"
 STATIC_URL = 'static/'
-#STATICFILES_DIRS = [
-#    BASE_DIR / "static",
-#    '/data/elastfm/elastfm/static/',
-#]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-auto-field
@@ -144,12 +145,3 @@ INTERNAL_IPS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'downloads/') # 'data' is my media folder
 MEDIA_URL = "downloads/"
-
-if DEBUG==True:
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-
-

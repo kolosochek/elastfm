@@ -326,4 +326,4 @@ def download_track(request):
 
 def logout(request):
     request.session['nickname'] = ''
-    return HttpResponse(200)
+    return redirect('/')
