@@ -1,8 +1,9 @@
 **/downloads
 **/__pycache__
-core/migrations
 **/.idea
 **/settings.py
+**/admin/
+core/migrations
 *.pyc
 *.swo
 *.swp
