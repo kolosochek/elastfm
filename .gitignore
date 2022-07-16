@@ -8,4 +8,5 @@ core/migrations
 *.swo
 *.swp
 *.swn
-
+.venv/
+.git/
