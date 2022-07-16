@@ -33,8 +33,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'core',
-    'elastfm',
-    'bootstrap',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -150,5 +148,4 @@ if DEBUG==True:
         }
     }
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'elastfm.settings'
 
