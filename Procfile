@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn elastfm.wsgi:application
+web: gunicorn elastfm.wsgi:application --log-file -
