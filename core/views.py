@@ -321,7 +321,7 @@ def download_track(request):
             except IOError:
                 print("Can't open the file with given filename %s" % track.download_url)
 
-    return HttpResponse(200)
+    return HttpResponse('Filename: %s', (filename if filename else 'not found'))
 
 
 def logout(request):
