@@ -308,7 +308,7 @@ def download_track(request):
                 print("Can't save an audio stream!")
             # Update track info
             track.status = track_status
-            track.download_url = '%s/%s' % (output_path, filename)
+            track.download_url = '%s%s' % (output_path, filename)
             track.save()
 
             try:
