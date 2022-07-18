@@ -269,7 +269,7 @@ def get_track_list_by_page(request, lastfm_user, lastfm_target_page):
 def download_track(request):
     track_id = request.GET.get('track_id', '')
     extension = '.mp3'
-    output_path = 'downloads'
+    output_path = 'downloads/'
     track_status = 'Not downloaded'
     if len(track_id):
         try:
