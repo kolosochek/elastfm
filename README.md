@@ -2,7 +2,7 @@
 ### Purpose
 I just got a few free days, and decided to make something useful.
 Simple demostration below:
-![Simple app demo](/github/elastfm.gif.gif)
+![Simple app demo](/github/elastfm.gif)
 
 Key features:
 - Python 3.0 + Django + PyTube  
