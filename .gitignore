@@ -8,3 +8,6 @@ core/migrations
 *.swn
 .venv/
 .git/
+bin/
+lib/
+lib64/
