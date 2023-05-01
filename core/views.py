@@ -9,6 +9,7 @@ import mimetypes
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
 from core.models import LastFmUser, Track
+from django.core.exceptions import ObjectDoesNotExist
 from core.forms import LastFmUserForm
 
 
@@ -58,44 +59,81 @@ def check_lastfm_username(request):
         return HttpResponseNotAllowed(['POST'])
     post_dict = json.loads(request.body)
     request.session['nickname'] = post_dict.get('nickname').lower()
-    # debug
-    print(request.session['nickname'])
-    lastfm_base_url = "https://www.last.fm"
-    url = '%s/user/%s' % (lastfm_base_url, request.session['nickname'])
-    # debug
-    print(url)
-    # check user existance
+    # try to get LastfmUser object
     try:
-        response = send_request(url)
-        # user exist
-        if response.status_code == 200:
-            # create new LastFmUser object
-            lastfm_user, status = LastFmUser.objects.get_or_create(
-                nickname=request.session['nickname']
-            )
-            return JsonResponse({'success': 'Last.fm user %s is found!' % request.session['nickname']})
-        else:
-            # debug
-            print(response.status_code)
-            return JsonResponse({'error': "Can't find last.fm user %s" % request.session['nickname']})
+        lastfm_user = LastFmUser.objects.get(nickname=request.session['nickname'])
+    except ObjectDoesNotExist:
+        lastfm_user = False
 
-    except BaseException:
+    if (lastfm_user):
+        return JsonResponse({'success': 'Last.fm user %s is found!' % request.session['nickname']})
+    else:
+        lastfm_base_url = "https://www.last.fm"
+        url = '%s/user/%s/loved' % (lastfm_base_url, request.session['nickname'])
         # debug
-        print("Can't get or decode HTTP response from last.fm!")
-        return JsonResponse({'error': "Can't get or decode HTTP response from last.fm!"})
+        print(url)
+        # check user existance
+        try:
+            response = send_request(url)
+            # user exist
+            if response.status_code == 200:
+                # create new LastFmUser object
+                lastfm_user, status = LastFmUser.objects.get_or_create(
+                    nickname=request.session['nickname']
+                )
+
+                # try to send last.fm GET request and save the response
+                page = response.content.decode('utf-8')
+                # if we got some data from last.fm, let's try to make an HTML document from response string
+                if page:
+                    html_page = html.fromstring(page)
+                    chartlist_row = html_page.cssselect('table.chartlist tr.chartlist-row')
+                    for index, row in enumerate(chartlist_row):
+                        track_url = get_safe_first_item(row.cssselect('td.chartlist-play a'))
+                        if type(track_url) is not str:
+                            track_url = track_url.attrib.get('href', '')
+                        else:
+                            track_url = ''
+                        track_name = get_safe_first_item(row.cssselect('td.chartlist-name a')).text_content()
+                        artist_name = get_safe_first_item(row.cssselect('td.chartlist-artist a')).text_content()
+                        # debug output
+                        print('%s. %s - %s WWW-> %s' % (index + 1, artist_name, track_name, track_url))
+                        track_status = 'Not downloaded'
+                        # create new Track object
+                        track, created = Track.objects.get_or_create(
+                            artist=artist_name,
+                            track=track_name,
+                            url=track_url,
+                            owner=LastFmUser.objects.get(nickname=lastfm_user.nickname),
+                            status=track_status,
+                        )
+
+                return JsonResponse({'success': 'Last.fm user %s is found!' % request.session['nickname']})
+            else:
+                # debug
+                print(response.status_code)
+                return JsonResponse({'error': "Can't find last.fm user %s" % request.session['nickname']})
+
+        except BaseException:
+            # debug
+            print("Can't get or decode HTTP response from last.fm!")
+            return JsonResponse({'error': "Can't get or decode HTTP response from last.fm!"})
 
 
 # initial last.fm page request, to evaluate how many pages do we need to parse
-def get_profile_page_view(request):
+def get_profile_page_view(request, page=1):
     lastfm_user_nickname = request.session.get('nickname', False).lower()
+    pagination_current_page = request.session.get('pagination_current_page', page)
+    lastfm_pagination_limit = 50
     template = 'profile.html'
     context = {
         'active_page': 'profile',
+        'pagination_current_page': pagination_current_page,
         'isAuth': lastfm_user_nickname
     }
 
     # if we have stored username in request.session
-    if len(lastfm_user_nickname & lastfm_user_nickname):
+    if len(lastfm_user_nickname):
         lastfm_user, lastfm_user_created = LastFmUser.objects.get_or_create(
             nickname=lastfm_user_nickname
         )
@@ -111,11 +149,14 @@ def get_profile_page_view(request):
         # check avatar_url length, so we can be sure that we already have that profile page in DB
         # so we don't need to update all the object model fields and just render a template with given context
         if len(lastfm_user.avatar_url):
+            total_pages = ceil(int(lastfm_user.total_loved_tracks) / lastfm_pagination_limit)
             context['lastfm_user'] = lastfm_user
+            context['pagination_total_pages'] = total_pages
+            if int(lastfm_user.total_loved_tracks) > lastfm_pagination_limit:
+                context['total_pages_range'] = range(1, total_pages + 1)
             return render(request, template, context)
         # in this case we need to send request to last.fm /profile page and collect all data about given last.fm username
         else:
-            lastfm_pagination_limit = 50
             lastfm_base_url = "https://www.last.fm"
             url = '%s/user/%s' % (lastfm_base_url, lastfm_user_nickname)
             summary_css_query = "div.header-metadata-display p a"
@@ -194,6 +235,9 @@ def get_profile_page_view(request):
                 lastfm_user.save()
 
                 context['lastfm_user'] = lastfm_user
+                context['pagination_total_pages'] = total_pages
+                if total_loved_tracks > lastfm_pagination_limit:
+                    context['total_pages_range'] = range(1, ceil(total_loved_tracks / lastfm_pagination_limit) + 1)
     else:
         template = 'errors/404.html'
         context['errors'] = '404'

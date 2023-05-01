@@ -1,0 +1,13 @@
+{% block pagination %}
+  {% if total_pages_range %}
+    <nav aria-label="Page navigation" class="b-page-navigation-wrapper d-flex justify-content-end mt-2 mb-2">
+      <ul class="b-page-navigation pagination">
+        <li class="b-page-item page-item {% if pagination_current_page == 1 %}disabled{% endif %}"><a class="b-page-item-link page-link" href="/profile/{{pagination_current_page|add:"-1"}}">Previous</a></li>
+        {% for page in total_pages_range %}
+        <li class="b-page-item page-item{% if forloop.counter == pagination_current_page %} state__active{% endif %}"><a class="b-page-item-link page-link" href="/profile/{{page}}">{{page}}</a></li>
+        {% endfor %}
+        <li class="b-page-item page-item {% if pagination_current_page == pagination_total_pages %}disabled{% endif %}"><a class="b-page-item-link page-link" href="/profile/{{pagination_current_page|add:"1"}}">Next</a></li>
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

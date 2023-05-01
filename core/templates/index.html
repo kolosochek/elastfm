@@ -31,6 +31,9 @@
     </form>
 </section>
 <script>
+    // redirect
+    const redirectDelay = 1000;
+    const redirectUrl = "/profile/"
 
     const escapeHtml = (html) => {
         // debug
@@ -99,10 +102,10 @@
                 if ("success" in response?.data) {
                     // user exist
                     showMessage(response.data.success, "success")
-                    // timeout redirect
+                    // redirect
                     setTimeout(() => {
-                        window.location = '/profile/'
-                    }, 1000)
+                        window.location = redirectUrl
+                    }, redirectDelay)
                 } else if ("error" in response?.data) {
                     // can't find user
                     showMessage(response.data.error, "danger")

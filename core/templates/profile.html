@@ -25,9 +25,6 @@
         <th scope="col">Artist</th>
         <th scope="col">Url</th>
         <th scope="col">Download</th>
-        <!--
-        <th scope="col">Download URL</th>
-        -->
     </tr>
     </thead>
     <tbody>
@@ -44,31 +41,15 @@
             </a>
             {% endif %}
         </td>
-        <!-- <td>
-            {% if track.download_url %}
-            <a class="btn download" href="{{ track.download_url }}" download>
-                <i class="bi-download" role="img" aria-label="download"></i>
-            </a>
-            {% endif %}
-        </td>
-        -->
     </tr>
     {% endfor %}
     </tbody>
 </table>
+<!-- pagination -->
+{% include 'pagination.html' with total_pages_range=total_pages_range pagination_current_page=pagination_current_page pagination_total_pages=pagination_total_pages %}
 {% else %}
-{% if lastfm_user.total_loved_tracks != '0' %}
-<p>No tracks for this user has been found. You need to parse all the track info first.</p>
-<p><a href="/parse_loved_tracks" class="btn btn-success">Parse all loved <b>{{ lastfm_user.nickname }}</b> tracks(can
-    take a long time)</a></p>
-{% elif lastfm_user.total_loved_tracks == '0'  %}
-<p>No tracks for this user has been found. Try to like some tracks on <a href="https://www.last.fm/">Last.fm</a></p>
+    {% if lastfm_user.total_loved_tracks == '0'  %}
+        <p>No tracks for this user has been found. Try to like some tracks on <a href="https://www.last.fm/">Last.fm</a></p>
+    {% endif %}
 {% endif %}
-{% endif %}
-<!--
-<p class="align-right">
-
-    <a href="/tracks" class="btn btn-success">Show all <b>{{ lastfm_user.nickname }}</b> parsed tracks</a>
-</p>
--->
 {% endblock %}

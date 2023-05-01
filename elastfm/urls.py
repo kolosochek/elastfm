@@ -31,6 +31,7 @@ urlpatterns = [
     path('parse_loved_tracks/', parse_lastfm_user_loved_tracks_view),
     path('tracks/', get_lastfm_user_loved_tracks_view),
     path('profile/', get_profile_page_view),
+    path('profile/<int:page>', get_profile_page_view),
     path('download_track/', download_track),
     path('logout/', logout),
     path('', index_page_view),
