@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 from core.views import index_page_view
+from core.views import check_lastfm_username
 from core.views import get_profile_page_view
 from core.views import parse_lastfm_user_loved_tracks_view
 from core.views import get_lastfm_user_loved_tracks_view
@@ -33,6 +34,7 @@ urlpatterns = [
     path('download_track/', download_track),
     path('logout/', logout),
     path('', index_page_view),
+    path('check_lastfm_username/', check_lastfm_username),
     # debug
     path('__debug__/', include('debug_toolbar.urls')),
 ]

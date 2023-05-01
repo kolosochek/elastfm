@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, reverse
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseNotAllowed, JsonResponse
 from requests import get as send_request
 from lxml import html
 from re import findall
 from math import ceil
+import json
 import mimetypes
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
@@ -20,7 +21,7 @@ def get_safe_int(number_as_string):
         return ''.join(findall(r'\d+', number_as_string))
 
 
-# /
+#
 def get_safe_first_item(array):
     try:
         return array[0]
@@ -30,39 +31,17 @@ def get_safe_first_item(array):
 
 def index_page_view(request):
     template = "index.html"
+    isAuth = request.session.get('nickname', False)
     context = {
         'form': LastFmUserForm,
         'active_page': 'index',
+        'isAuth': isAuth,
     }
     if request.method == 'POST':  # If the form has been submitted...
         form = LastFmUserForm(request.POST)
         nickname = request.POST.get('nickname', '').lower()
         if form.is_valid():
-            lastfm_base_url = "https://www.last.fm"
-            url = '%s/user/%s' % (lastfm_base_url, nickname)
-            # check user existance
-            try:
-                response = send_request(url)
-                if response.status_code != 200:
-                    # debug
-                    print('Got unexpected response code! HTTP status code is %s' % response.status_code)
-                    if response.status_code == 404:
-                        # debug
-                        print('Username does not exist!')
-                        template = 'errors/404.html'
-                        context['errors'] = '404'
-                    return render(request, template, context)
-            except BaseException:
-                # debug
-                print("Can't get or decode HTTP response from last.fm!")
-                template = 'errors/404.html'
-                context['errors'] = response.status_code  # '404'
-                return render(request, template, context)
 
-            # create new LastFmUser object
-            lastfm_user, status = LastFmUser.objects.get_or_create(
-                nickname=nickname
-            )
             # save current username in request.session
             request.session['nickname'] = nickname
             return redirect('/profile')
@@ -74,15 +53,49 @@ def index_page_view(request):
         return render(request, template, context)
 
 
+def check_lastfm_username(request):
+    if not request.method == 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    post_dict = json.loads(request.body)
+    request.session['nickname'] = post_dict.get('nickname').lower()
+    # debug
+    print(request.session['nickname'])
+    lastfm_base_url = "https://www.last.fm"
+    url = '%s/user/%s' % (lastfm_base_url, request.session['nickname'])
+    # debug
+    print(url)
+    # check user existance
+    try:
+        response = send_request(url)
+        # user exist
+        if response.status_code == 200:
+            # create new LastFmUser object
+            lastfm_user, status = LastFmUser.objects.get_or_create(
+                nickname=request.session['nickname']
+            )
+            return JsonResponse({'success': 'Last.fm user %s is found!' % request.session['nickname']})
+        else:
+            # debug
+            print(response.status_code)
+            return JsonResponse({'error': "Can't find last.fm user %s" % request.session['nickname']})
+
+    except BaseException:
+        # debug
+        print("Can't get or decode HTTP response from last.fm!")
+        return JsonResponse({'error': "Can't get or decode HTTP response from last.fm!"})
+
+
 # initial last.fm page request, to evaluate how many pages do we need to parse
 def get_profile_page_view(request):
+    lastfm_user_nickname = request.session.get('nickname', False).lower()
     template = 'profile.html'
     context = {
         'active_page': 'profile',
+        'isAuth': lastfm_user_nickname
     }
-    lastfm_user_nickname = request.session.get('nickname', '').lower()
+
     # if we have stored username in request.session
-    if len(lastfm_user_nickname):
+    if len(lastfm_user_nickname & lastfm_user_nickname):
         lastfm_user, lastfm_user_created = LastFmUser.objects.get_or_create(
             nickname=lastfm_user_nickname
         )
@@ -195,7 +208,7 @@ def parse_lastfm_user_loved_tracks_view(request):
     )
     template = "profile.html"
     context = {
-        'active_page':'profile',
+        'active_page': 'profile',
     }
     # let's also check var type and var is not None
     if get_safe_int(lastfm_user.total_pages) > 0:
@@ -204,14 +217,14 @@ def parse_lastfm_user_loved_tracks_view(request):
             result = get_track_list_by_page(request, lastfm_user, lastfm_target_page=page + 1)
             # debug
             print(result)
-    #return render(request, template, context)
+    # return render(request, template, context)
     return redirect('/profile')
 
 
 def get_lastfm_user_loved_tracks_view(request):
     pass
-    #lastfm_user_nickname = request.session.get('nickname', '').lower()
-    #if len(lastfm_user_nickname):
+    # lastfm_user_nickname = request.session.get('nickname', '').lower()
+    # if len(lastfm_user_nickname):
     #    lastfm_user = LastFmUser.objects.get(nickname=lastfm_user_nickname)
     #    template = "tracks.html"
     #    context = {
@@ -222,7 +235,7 @@ def get_lastfm_user_loved_tracks_view(request):
     #    context['lastfm_user'] = lastfm_user
     #    context['track_list'] = track_list
 
-    #return render(request, template, context)
+    # return render(request, template, context)
 
 
 # gets all username tracks and parsing it

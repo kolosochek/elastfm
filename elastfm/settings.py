@@ -27,6 +27,7 @@ SECRET_KEY = 'django-insecure-(t@!t@+4c+&$rwzp)!k7#8m25k0^o^js&sw^$9q@c^jsc_sfk5
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    "127.0.0.1",
     "elastfm.herokuapp.com",
 ]
 

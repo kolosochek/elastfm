@@ -3,7 +3,7 @@
 
 {% block content %}
 <section class="content b-content b-page-index">
-    <h3 class="text-center">How does it works?</h3>
+    <h3 class="text-center">How does it work?</h3>
     <p></p>
     <!-- <p class="text-left">We just need your <a href="https://www.last.fm/">Last.fm</a> profile name, something like <b>Cherry_ICEE</b>. <br />Sounds like magic, huh?</p> -->
     <!-- <p>Then we will do all the magic, and you will be able to download, save, or move your <a href="https://www.last.fm/">Last.fm</a>
@@ -11,7 +11,7 @@
     {% if errors %}
     <p class="error">{{ errors }}</p>
     {% endif %}
-    <form method="post">
+    <form method="post" id="nickname_submit_form">
         {% csrf_token %}
         <p class="text-left">We don't need your <a href="https://www.last.fm/">Last.fm</a> password, email, credit card
             or any kind of personal info.</p>
@@ -26,8 +26,96 @@
             </p>
         </div>
         <p>
-            <button type="submit" class="btn btn-success">Submit</button>
+            <button type="submit" id="submit" class="btn btn-success">Check username</button>
         </p>
     </form>
 </section>
+<script>
+
+    const escapeHtml = (html) => {
+        // debug
+        console.log(`html`);
+        console.log(html);
+        //
+        return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+    const showMessage = (text, severity = "danger") => {
+        const messageWrapper = document.getElementById("messageWrapper");
+        if (!messageWrapper) throw new Error(`Can't find message wrapper!`);
+        const message = `<div class="alert alert-${escapeHtml(severity)} alert-dismissible fade show" role="alert">
+  ${escapeHtml(text)}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>`
+        // append html markup to the message wrapper
+        messageWrapper.innerHTML = message;
+        ;
+    }
+
+    const spinnerWrapper = document.createElement("div");
+    const spinner = document.createElement("div");
+    spinnerWrapper.id = "spinnerWrapper";
+    spinnerWrapper.className = "b-spinner-wrapper";
+    spinner.id = "spinner";
+    spinner.className = "b-spinner";
+    spinner.innerHTML = `<div class="spinner-border" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`
+
+    const form = document.getElementById("nickname_submit_form");
+    if (!form) throw new Error(`Can't find html form element`);
+    form.addEventListener("submit", (e) => {
+        // prevent page reload
+        e.preventDefault();
+        // add preloader
+        if (document.getElementById("spinnerWrapper")) {
+            // add spinner
+            spinnerWrapper.classList.add("state__visible");
+        } else {
+            // inject nodes into DOM
+            spinnerWrapper.appendChild(spinner);
+            document.body.prepend(spinnerWrapper);
+            spinnerWrapper.classList.add("state__visible");
+        }
+
+        // prepare form data
+        const formData = new FormData(form);
+        const result = {};
+        for (let entry of formData.entries()) {
+            result[entry[0]] = entry[1];
+        }
+        const data = JSON.stringify(result)
+        // make http get request using axios
+        axios.post("/check_lastfm_username/",
+            data,
+            {
+                headers:
+                    {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+            },
+            {withCredentials: true}
+        )
+            .then(function (response) {
+                if ("success" in response?.data) {
+                    // user exist
+                    showMessage(response.data.success, "success")
+                    // timeout redirect
+                    setTimeout(() => {
+                        window.location = '/profile/'
+                    }, 1000)
+                } else if ("error" in response?.data) {
+                    // can't find user
+                    showMessage(response.data.error, "danger")
+                } else {
+                    // something is broken
+                }
+                spinnerWrapper.classList.remove("state__visible");
+            }).catch(reason => {
+            spinnerWrapper.classList.remove("state__visible");
+            console.log(`Can't post / ${reason.message ?? reason}`)
+        })
+
+
+    });
+</script>
 {% endblock %}
