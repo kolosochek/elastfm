@@ -184,6 +184,10 @@ body {
 /* #messageWrapper */
 #messageWrapper {
     position: fixed;
+    z-index: 1;
+}
+#messageWrapper > div {
+    width: calc((100%) - 30px);
 }
 
 /* spinner modal */

@@ -11,6 +11,7 @@ from pytube.exceptions import VideoUnavailable
 from core.models import LastFmUser, Track
 from django.core.exceptions import ObjectDoesNotExist
 from core.forms import LastFmUserForm
+from urllib.error import HTTPError
 
 
 def get_safe_int(number_as_string):
@@ -412,9 +413,9 @@ def download_track(request):
                     filename = filename + '_LQ_' + extension
                     track_stream.first().download(output_path=output_path, filename=filename)
                     track_status = 'Downloaded'
-            except BaseException:
-                print("Can't save an audio stream!")
-                return JsonResponse({"error": "Can't save an audio stream!"})
+            except HTTPError as error:
+                print("Can't save an audio stream! Reason: %s" % error)
+                return JsonResponse({"error": "Can't save an audio stream! Reason: %s" % error})
             # Update track info
             track.status = track_status
             track.download_url = '%s%s' % (output_path, filename)

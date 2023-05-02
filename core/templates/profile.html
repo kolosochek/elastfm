@@ -57,8 +57,14 @@
 <script>
     // init spinner loader
     spinnerLoaderInit();
+    // bing showMessage to scope
     const showMessage = showMessageScript;
-
+    // dom message wrapper
+    const messageWrapper = document.getElementById("messageWrapper");
+    if (!messageWrapper) throw new Error(`Can't find message wrapper!`);
+    // dom spinner wrapper
+    const spinnerWrapper = document.getElementById("spinnerWrapper");
+    if (!spinnerWrapper) throw new Error("Can't find spinnerWrapper node by id!");
     // redirect
     const redirectUrl = `/profile/`
 
@@ -69,9 +75,6 @@
     pagination_links_arr.forEach((link) => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
-
-            const spinnerWrapper = document.getElementById("spinnerWrapper");
-            if (!spinnerWrapper) throw new Error("Can't find spinnerWrapper node by id!");
             // show loader spinner
             spinnerWrapper.classList.add("state__visible");
             // parse page int from link
@@ -113,6 +116,9 @@
         download_links_arr.forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
+
+                // clear messagewrapper
+                messageWrapper.innerHTML = '';
 
                 // add spinner loader
                 spinnerWrapper.classList.add("state__visible");
