@@ -363,15 +363,25 @@ def get_track_list_by_page(lastfm_user, page):
 
 
 def download_track(request):
-    track_id = request.GET.get('track_id', '')
+    if not request.method == 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    post_dict = json.loads(request.body)
+    request.session['track_id'] = post_dict.get('track_id')
+    # debug
+    print(post_dict)
+    #
+    track_id = request.session['track_id']
     extension = '.mp3'
     output_path = 'downloads/'
     track_status = 'Not downloaded'
     if len(track_id):
         try:
             track = Track.objects.get(pk=get_safe_int(track_id))
+            if track.download_url:
+                return JsonResponse({"success": "All ok, can download track %s" % track.download_url, "track_download_url": track.download_url})
         except BaseException:
             print("Can't find a track by given id %s!" % track_id)
+            return JsonResponse({"error": "Can't find a track by given id %s!" % track_id})
 
         if len(track.url):
             try:
@@ -387,7 +397,9 @@ def download_track(request):
                 yt.check_availability()
             except VideoUnavailable:
                 print("YouTube video %s is unavailable" % track.url)
-            # YouTube video by given link are exist, let's try to strip audio and download it
+                return JsonResponse({"error": "YouTube video %s is unavailable" % track.url})
+
+            # YouTube video by given link is exist, let's try to strip audio and download it
             try:
                 track_stream = yt.streams.filter(only_audio=True, mime_type='audio/mp4', abr='128kbps')
                 if len(track_stream):
@@ -402,22 +414,25 @@ def download_track(request):
                     track_status = 'Downloaded'
             except BaseException:
                 print("Can't save an audio stream!")
+                return JsonResponse({"error": "Can't save an audio stream!"})
             # Update track info
             track.status = track_status
             track.download_url = '%s%s' % (output_path, filename)
             track.save()
+            return JsonResponse({"success": "Can download", "track_download_url": track.download_url})
 
-            try:
-                with open(track.download_url, 'rb') as f:
-                    file_data = f.read()
-                    # debug
-                    response = HttpResponse(file_data, content_type='audio/mpeg4')
-                    response['Content-Disposition'] = 'attachment; filename="%s"' % filename  # track.download_url
-                    return response
-            except IOError:
-                print("Can't open the file with given filename %s" % track.download_url)
+    return JsonResponse({"error": "Can't open the file with given filename %s" % track.download_url})
 
-    return HttpResponse('Filename: %s', (filename if filename else 'not found'))
+
+def return_attachment(request, filename=''):
+    try:
+        with open('downloads/%s' % filename, 'rb') as f:
+            file_data = f.read()
+            response = HttpResponse(file_data, content_type='audio/mpeg4')
+            response['Content-Disposition'] = 'attachment; filename="%s"' % filename  # track.download_url
+            return response
+    except IOError:
+        print("Can't open the file with given filename %s" % filename)
 
 
 def logout(request):

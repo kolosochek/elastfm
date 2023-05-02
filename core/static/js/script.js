@@ -12,3 +12,22 @@ const spinnerLoaderInit = () => {
   spinnerWrapper.appendChild(spinner);
   document.body.prepend(spinnerWrapper);
 }
+
+const showMessageScript = (text, severity = "danger") => {
+  const escapeHtml = (html) => {
+    // debug
+    console.log(`html`);
+    console.log(html);
+    //
+    return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  const messageWrapper = document.getElementById("messageWrapper");
+  if (!messageWrapper) throw new Error(`Can't find message wrapper!`);
+  const message = `<div class="alert alert-${escapeHtml(severity)} alert-dismissible fade show" role="alert">
+  ${escapeHtml(text)}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>`
+  // append html markup to the message wrapper
+  messageWrapper.innerHTML = message;
+}
+

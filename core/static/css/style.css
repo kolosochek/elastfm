@@ -181,6 +181,10 @@ body {
     background-color: #853232;
 }
 
+/* #messageWrapper */
+#messageWrapper {
+    position: fixed;
+}
 
 /* spinner modal */
 .b-spinner-wrapper {

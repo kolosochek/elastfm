@@ -25,6 +25,7 @@ from core.views import get_profile_page_view
 from core.views import get_lastfm_user_loved_tracks_view
 from core.views import logout
 from core.views import download_track
+from core.views import return_attachment
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,6 +33,7 @@ urlpatterns = [
     path('profile/', get_profile_page_view),
     path('profile/<int:page>', get_profile_page_view),
     path('download_track/', download_track),
+    path('profile/downloads/<str:filename>', return_attachment),
     path('logout/', logout),
     path('', index_page_view),
     path('check_lastfm_username/', check_lastfm_username),

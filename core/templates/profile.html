@@ -37,7 +37,7 @@
         <td>{{ track.url }}</td>
         <td class="text-center">
             {% if track.url %}
-            <a class="btn download" href="/download_track/?track_id={{ track.pk }}">
+            <a class="b-track-download-link btn download" href="/download_track/?track_id={{ track.pk }}">
                 <i class="bi bi-file-earmark-arrow-down" role="img" aria-label="download"></i>
             </a>
             {% endif %}
@@ -57,15 +57,16 @@
 <script>
     // init spinner loader
     spinnerLoaderInit();
+    const showMessage = showMessageScript;
 
     // redirect
     const redirectUrl = `/profile/`
 
-    const links_arr = document.querySelectorAll("nav.b-page-navigation-wrapper a")
-    if (!links_arr.length) throw new Error("links_arr is empty!")
+    const pagination_links_arr = document.querySelectorAll("nav.b-page-navigation-wrapper a")
+    if (!pagination_links_arr.length) throw new Error("links_arr is empty!")
 
     // add pagination link event handler
-    links_arr.forEach((link) => {
+    pagination_links_arr.forEach((link) => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
 
@@ -74,7 +75,7 @@
             // show loader spinner
             spinnerWrapper.classList.add("state__visible");
             // parse page int from link
-            const hrefLink = e.target.attributes.href.nodeValue
+            const hrefLink = link.attributes.href.nodeValue
             const hrefPageIntArr = hrefLink.match(/\d+/)
             const hrefPageInt = hrefPageIntArr[0]
 
@@ -104,6 +105,55 @@
             })
         })
     })
+
+    // download track
+    const download_links_arr = document.querySelectorAll("a.b-track-download-link")
+    // add click event listner only if we have track download links on this page
+    if (download_links_arr.length) {
+        download_links_arr.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+
+                // add spinner loader
+                spinnerWrapper.classList.add("state__visible");
+
+                const hrefLink = link.attributes.href.nodeValue
+                const hrefTrackIdIntArr = hrefLink.match(/\d+/)
+                const hrefTrackIdInt = hrefTrackIdIntArr[0]
+
+                axios.post("/download_track/",
+                    {"track_id": hrefTrackIdInt},
+                    {
+                        headers:
+                            {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                            }
+                    },
+                    {withCredentials: true}
+                )
+                    .then((response) => {
+                        if ("success" in response?.data) {
+                            // success
+                            showMessage(response.data.success, "success")
+                            // tracks found, can redirect
+                            window.location = response.data.track_download_url;
+                        } else if ("error" in response?.data) {
+                            // can't download track
+                            showMessage(response.data.error, "danger")
+                            console.log(response.data.error)
+                        } else {
+                            // something is broken
+                            throw new Error("Woops, something is broken!")
+                        }
+                        spinnerWrapper.classList.remove("state__visible");
+                    }).catch(reason => {
+                        spinnerWrapper.classList.remove("state__visible");
+                        console.log(`Can't post / ${reason.message ?? reason}`)
+                        showMessage(`${reason.message ?? reason}`, "danger")
+                    });
+            })
+        })
+    }
 </script>
 
 {% endblock %}
