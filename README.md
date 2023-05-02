@@ -1,13 +1,26 @@
-# eLast.fm tracks downloader https://elastfm.herokuapp.com/
-### Purpose
-I just got a few free days, and decided to make something useful.
-Simple demostration below:
-![Simple app demo](/github/elastfm.gif)
+https://youtu.be/SFCnf_M481o
 
-Key features:
-- Python 3.0 + Django + PyTube  
-- You just need to enter your last.fm username, then you be able to download em, one-by-one.
-- All tracks are COPYRIGHT-FREE, as they are downloading from YouTube.
-- Best track quality by default.
-- It's kinda slow due to cheapest Heroku plan, but you always can download repo and run it on local system, and be able to download all tracks instantly
-##### github https://github.com/kolosochek/elastfm
+# Elast.fm
+## https://elastfm.herokuapp.com/
+### An easy way to save your last.fm loved tracks!
+
+[![elastfm_video](https://raw.githubusercontent.com/kolosochek/elastfm/main/github/images/elastfm_player.png)](https://www.youtube.com/watch?v=SFCnf_M481o)
+![homepage](https://raw.githubusercontent.com/kolosochek/elastfm/main/github/images/elastfm_homepage.png)
+![profile](https://raw.githubusercontent.com/kolosochek/elastfm/main/github/images/elastfm_profile.png)
+Fullstack development.
+
+#### What is **elastfm?**?
+Now you can DOWNLOAD all your loved tracks from Last.fm. And enjoy your favorite music even without internet.
+ALL MUSIC ARE BEING DOWNLOADED FROM YOUTUBE.COM AND FREE TO PERSONAL USE!
+
+Complex solution for parse and aggregate %username% loved tracks from last.fm.
+- Get user profile
+- Parse all entities
+- Connect backend and backend via AJAX by Axios
+
+
+#### Project features:
+* Backend: Python3+Django
+* Frontend: HTML5+JS+Bootstrap+Axios
+
+Enjoy!

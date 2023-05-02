@@ -86,6 +86,7 @@
             }).catch(reason => {
             spinnerWrapper.classList.remove("state__visible");
             console.log(`Can't post / ${reason.message ?? reason}`)
+            showMessage(`${reason.message ?? reason}`, "danger")
         })
 
 

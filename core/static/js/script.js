@@ -15,10 +15,6 @@ const spinnerLoaderInit = () => {
 
 const showMessageScript = (text, severity = "danger") => {
   const escapeHtml = (html) => {
-    // debug
-    console.log(`html`);
-    console.log(html);
-    //
     return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
   const messageWrapper = document.getElementById("messageWrapper");

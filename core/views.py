@@ -7,11 +7,11 @@ from math import ceil
 import json
 import mimetypes
 from pytube import YouTube
-from pytube.exceptions import VideoUnavailable
 from core.models import LastFmUser, Track
 from django.core.exceptions import ObjectDoesNotExist
 from core.forms import LastFmUserForm
 from urllib.error import HTTPError
+from pytube.exceptions import AgeRestrictedError, VideoUnavailable
 
 
 def get_safe_int(number_as_string):
@@ -60,6 +60,7 @@ def check_lastfm_username(request):
         return HttpResponseNotAllowed(['POST'])
     post_dict = json.loads(request.body)
     request.session['nickname'] = post_dict.get('nickname').lower()
+    request.session['pagination_current_page'] = 1
     # try to get LastfmUser object
     try:
         lastfm_user = LastFmUser.objects.get(nickname=request.session['nickname'])
@@ -413,14 +414,14 @@ def download_track(request):
                     filename = filename + '_LQ_' + extension
                     track_stream.first().download(output_path=output_path, filename=filename)
                     track_status = 'Downloaded'
-            except HTTPError as error:
+            except (HTTPError, VideoUnavailable, AgeRestrictedError) as error:
                 print("Can't save an audio stream! Reason: %s" % error)
                 return JsonResponse({"error": "Can't save an audio stream! Reason: %s" % error})
             # Update track info
             track.status = track_status
             track.download_url = '%s%s' % (output_path, filename)
             track.save()
-            return JsonResponse({"success": "Can download", "track_download_url": track.download_url})
+            return JsonResponse({"success": "All ok, can download track %s" % track.download_url, "track_download_url": track.download_url})
 
     return JsonResponse({"error": "Can't open the file with given filename %s" % track.download_url})
 
