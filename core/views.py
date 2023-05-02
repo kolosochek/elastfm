@@ -436,6 +436,8 @@ def return_attachment(request, filename=''):
     except IOError:
         print("Can't open the file with given filename %s" % filename)
 
+    return JsonResponse({"error": "Can't open the file with given filename %s" % filename})
+
 
 def logout(request):
     request.session['nickname'] = ''
