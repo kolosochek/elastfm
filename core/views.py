@@ -88,7 +88,9 @@ def check_lastfm_username(request):
                 if page:
                     html_page = html.fromstring(page)
                     chartlist_row = html_page.cssselect('table.chartlist tr.chartlist-row')
+                    track_number_offset = 0
                     for index, row in enumerate(chartlist_row):
+                        track_number = track_number_offset + index + 1
                         track_url = get_safe_first_item(row.cssselect('td.chartlist-play a'))
                         if type(track_url) is not str:
                             track_url = track_url.attrib.get('href', '')
@@ -103,6 +105,7 @@ def check_lastfm_username(request):
                         track, created = Track.objects.get_or_create(
                             artist=artist_name,
                             track=track_name,
+                            number=track_number,
                             url=track_url,
                             owner=LastFmUser.objects.get(nickname=lastfm_user.nickname),
                             status=track_status,
@@ -119,12 +122,38 @@ def check_lastfm_username(request):
             print("Can't get or decode HTTP response from last.fm!")
             return JsonResponse({'error': "Can't get or decode HTTP response from last.fm!"})
 
+def check_page_tracks(request):
+    if not request.method == 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    post_dict = json.loads(request.body)
+    request.session['lastfm_username'] = post_dict.get('lastfm_username').lower()
+    request.session['pagination_current_page'] = post_dict.get('pagination_current_page', 1)
+    # debug
+    print(post_dict)
+    #
+    # try to get LastfmUser object
+    try:
+        lastfm_user = LastFmUser.objects.get(nickname=request.session['nickname'])
+    except ObjectDoesNotExist:
+        lastfm_user = False
+    pagination_limit = 50
+    track_list = Track.objects.filter(
+        owner=lastfm_user,
+        number__gt=(request.session['pagination_current_page'] - 1) * pagination_limit,
+        number__lt=request.session['pagination_current_page'] * pagination_limit) \
+        .order_by("number")
+    if len(track_list):
+        return JsonResponse({"success": "Can redirect"})
+    else:
+        # debug
+        print("No tracks for username %s" % lastfm_user.nickname)
+        get_track_list_by_page(lastfm_user, request.session['pagination_current_page'])
+        return JsonResponse({"success": "Can redirect"})
 
-# initial last.fm page request, to evaluate how many pages do we need to parse
 def get_profile_page_view(request, page=1):
-    lastfm_user_nickname = request.session.get('nickname', False).lower()
+    lastfm_user_nickname = request.session.get('nickname', '').lower()
     pagination_current_page = request.session.get('pagination_current_page', page)
-    lastfm_pagination_limit = 50
+    pagination_limit = 50
     template = 'profile.html'
     context = {
         'active_page': 'profile',
@@ -138,21 +167,25 @@ def get_profile_page_view(request, page=1):
             nickname=lastfm_user_nickname
         )
         context['lastfm_user'] = lastfm_user
-        track_list = Track.objects.filter(owner=lastfm_user)
+        track_list = Track.objects.filter(
+            owner=lastfm_user,
+            number__gt=(pagination_current_page - 1) * pagination_limit,
+            number__lt=pagination_current_page * pagination_limit)\
+            .order_by("number")
         if len(track_list):
             context['track_list'] = track_list
         else:
             # debug
             print("No tracks for username %s" % lastfm_user.nickname)
-            context['track_list'] = ''
+            context['track_list'] = get_track_list_by_page(lastfm_user, pagination_current_page)
 
         # check avatar_url length, so we can be sure that we already have that profile page in DB
         # so we don't need to update all the object model fields and just render a template with given context
         if len(lastfm_user.avatar_url):
-            total_pages = ceil(int(lastfm_user.total_loved_tracks) / lastfm_pagination_limit)
+            total_pages = ceil(lastfm_user.total_loved_tracks / pagination_limit)
             context['lastfm_user'] = lastfm_user
             context['pagination_total_pages'] = total_pages
-            if int(lastfm_user.total_loved_tracks) > lastfm_pagination_limit:
+            if int(lastfm_user.total_loved_tracks) > pagination_limit:
                 context['total_pages_range'] = range(1, total_pages + 1)
             return render(request, template, context)
         # in this case we need to send request to last.fm /profile page and collect all data about given last.fm username
@@ -196,8 +229,12 @@ def get_profile_page_view(request, page=1):
                     total_scrobbled_tracks = get_safe_int(get_safe_first_item(total_summary).text)
                     # total artists(bands)
                     total_artists = get_safe_int(total_summary[1].text)
-                    # total loved tracks
-                    total_loved_tracks = get_safe_int(total_summary[-1].text)
+                    # if we have loved tracks
+                    if len(total_summary) > 2:
+                        # total loved tracks
+                        total_loved_tracks = get_safe_int(total_summary[-1].text)
+                    else:
+                        total_loved_tracks = 0
                     if total_scrobbled_tracks:
                         total_scrobbled_tracks = get_safe_int(total_scrobbled_tracks)
                         # debug
@@ -208,7 +245,7 @@ def get_profile_page_view(request, page=1):
                         print('Total artist count is: %s' % total_artists)
                     if total_loved_tracks:
                         total_loved_tracks = get_safe_int(total_loved_tracks)
-                        total_pages = ceil(total_loved_tracks / lastfm_pagination_limit)
+                        total_pages = ceil(total_loved_tracks / pagination_limit)
                         # debug
                         print('Total loved tracks is: %s' % total_loved_tracks)
                         print('And total pages is: %s' % total_pages)
@@ -236,8 +273,8 @@ def get_profile_page_view(request, page=1):
 
                 context['lastfm_user'] = lastfm_user
                 context['pagination_total_pages'] = total_pages
-                if total_loved_tracks > lastfm_pagination_limit:
-                    context['total_pages_range'] = range(1, ceil(total_loved_tracks / lastfm_pagination_limit) + 1)
+                if total_loved_tracks > pagination_limit:
+                    context['total_pages_range'] = range(1, ceil(total_loved_tracks / pagination_limit) + 1)
     else:
         template = 'errors/404.html'
         context['errors'] = '404'
@@ -285,22 +322,22 @@ def get_lastfm_user_loved_tracks_view(request):
 # gets all username tracks and parsing it
 # args: username as string
 # return: TrackList class object
-def get_track_list_by_page(request, lastfm_user, lastfm_target_page):
-    total_pages = 0
-    lastfm_pagination_limit = 50
+def get_track_list_by_page(lastfm_user, page):
+    pagination_limit = 50
     lastfm_base_url = "https://www.last.fm"
-    url = '%s/user/%s/loved?page=%s' % (lastfm_base_url, lastfm_user.nickname, lastfm_target_page)
-    output_path = 'downloads'
+    url = '%s/user/%s/loved?page=%s' % (lastfm_base_url, lastfm_user.nickname, page)
     # try to send last.fm GET request and save the response
     try:
         response = send_request(url)
-        page = response.content.decode('utf-8')
+        decoded_response = response.content.decode('utf-8')
     except BaseException:
         print("Can't get or decode HTTP response from last.fm!")
     # if we got some data from last.fm, let's try to make an HTML document from response string
-    if page:
-        html_page = html.fromstring(page)
+    if decoded_response:
+        html_page = html.fromstring(decoded_response)
         chartlist_row = html_page.cssselect('table.chartlist tr.chartlist-row')
+        # create tracklist and fill it
+        track_list = []
         for index, row in enumerate(chartlist_row):
             track_url = get_safe_first_item(row.cssselect('td.chartlist-play a'))
             if type(track_url) is not str:
@@ -316,11 +353,13 @@ def get_track_list_by_page(request, lastfm_user, lastfm_target_page):
             track, created = Track.objects.get_or_create(
                 artist=artist_name,
                 track=track_name,
+                number=pagination_limit * (page - 1) + index + 1,
                 url=track_url,
                 owner=LastFmUser.objects.get(nickname=lastfm_user.nickname),
                 status=track_status,
             )
-    return True
+            track_list.append(track)
+    return track_list
 
 
 def download_track(request):
@@ -341,7 +380,7 @@ def download_track(request):
                 print("Can't create an YouTube object")
             filename = '%s - %s' % (track.track, track.artist)
             # debug
-            # print(track.url)
+            print(track.url)
             # print(filename)
             # Check if video is available
             try:

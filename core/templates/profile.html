@@ -17,6 +17,7 @@
 </div>
 {% endblock %}
 {% if track_list %}
+{% include 'pagination.html' with total_pages_range=total_pages_range pagination_current_page=pagination_current_page pagination_total_pages=pagination_total_pages %}
 <table class="table">
     <thead>
     <tr>
@@ -30,7 +31,7 @@
     <tbody>
     {% for track in track_list %}
     <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
-        <th scope="row">{{ forloop.counter }}</th>
+        <th scope="row">{{ track.number }}</th>
         <td>{{ track.track }}</td>
         <td>{{ track.artist }}</td>
         <td>{{ track.url }}</td>
@@ -52,4 +53,57 @@
         <p>No tracks for this user has been found. Try to like some tracks on <a href="https://www.last.fm/">Last.fm</a></p>
     {% endif %}
 {% endif %}
+
+<script>
+    // init spinner loader
+    spinnerLoaderInit();
+
+    // redirect
+    const redirectUrl = `/profile/`
+
+    const links_arr = document.querySelectorAll("nav.b-page-navigation-wrapper a")
+    if (!links_arr.length) throw new Error("links_arr is empty!")
+
+    // add pagination link event handler
+    links_arr.forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            const spinnerWrapper = document.getElementById("spinnerWrapper");
+            if (!spinnerWrapper) throw new Error("Can't find spinnerWrapper node by id!");
+            // show loader spinner
+            spinnerWrapper.classList.add("state__visible");
+            // parse page int from link
+            const hrefLink = e.target.attributes.href.nodeValue
+            const hrefPageIntArr = hrefLink.match(/\d+/)
+            const hrefPageInt = hrefPageIntArr[0]
+
+            axios.post("/check_page_tracks/",
+                {"lastfm_username": "{{lastfm_user}}", "pagination_current_page": parseInt(hrefPageInt)},
+                {
+                    headers:
+                        {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        }
+                },
+                {withCredentials: true}
+            )
+                .then(function (response) {
+                    if ("success" in response?.data) {
+                        // tracks found, can redirect
+                        window.location = `${hrefLink}`
+                    } else if ("error" in response?.data) {
+                        // can't find user
+                    } else {
+                        // something is broken
+                    }
+                    spinnerWrapper.classList.remove("state__visible");
+                }).catch(reason => {
+                spinnerWrapper.classList.remove("state__visible");
+                console.log(`Can't post / ${reason.message ?? reason}`)
+            })
+        })
+    })
+</script>
+
 {% endblock %}

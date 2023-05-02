@@ -11,3 +11,4 @@ core/migrations
 bin/
 lib/
 lib64/
+downloads/

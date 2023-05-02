@@ -31,6 +31,9 @@
     </form>
 </section>
 <script>
+    // init spinner
+    spinnerLoaderInit();
+
     // redirect
     const redirectDelay = 1000;
     const redirectUrl = "/profile/"
@@ -51,34 +54,18 @@
 </div>`
         // append html markup to the message wrapper
         messageWrapper.innerHTML = message;
-        ;
     }
 
-    const spinnerWrapper = document.createElement("div");
-    const spinner = document.createElement("div");
-    spinnerWrapper.id = "spinnerWrapper";
-    spinnerWrapper.className = "b-spinner-wrapper";
-    spinner.id = "spinner";
-    spinner.className = "b-spinner";
-    spinner.innerHTML = `<div class="spinner-border" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`
+    const spinnerWrapper = document.getElementById("spinnerWrapper");
+    if (!spinnerWrapper) throw new Error("Can't find spinnerWrapper node by id!");
 
     const form = document.getElementById("nickname_submit_form");
     if (!form) throw new Error(`Can't find html form element`);
     form.addEventListener("submit", (e) => {
         // prevent page reload
         e.preventDefault();
-        // add preloader
-        if (document.getElementById("spinnerWrapper")) {
-            // add spinner
-            spinnerWrapper.classList.add("state__visible");
-        } else {
-            // inject nodes into DOM
-            spinnerWrapper.appendChild(spinner);
-            document.body.prepend(spinnerWrapper);
-            spinnerWrapper.classList.add("state__visible");
-        }
+        // show spinner loader
+        spinnerWrapper.classList.add("state__visible");
 
         // prepare form data
         const formData = new FormData(form);

@@ -1,19 +1,14 @@
-(function () {
-  'use strict'
-
-  // Fetch all the forms we want to apply custom Bootstrap validation styles to
-  var forms = document.querySelectorAll('.needs-validation')
-
-  // Loop over them and prevent submission
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
+const spinnerLoaderInit = () => {
+  const spinnerWrapper = document.createElement("div");
+  const spinner = document.createElement("div");
+  spinnerWrapper.id = "spinnerWrapper";
+  spinnerWrapper.className = "b-spinner-wrapper";
+  spinner.id = "spinner";
+  spinner.className = "b-spinner";
+  spinner.innerHTML = `<div class="spinner-border" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`
+  // inject nodes into DOM
+  spinnerWrapper.appendChild(spinner);
+  document.body.prepend(spinnerWrapper);
+}
